@@ -1,0 +1,41 @@
+{
+  "name": "slacker775/flysystem-backblaze-b2",
+  "description": "Flysystem adapter for Backblaze B2 storage",
+  "minimum-stability": "stable",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "David Hollis",
+      "email": "slacker775@gmail.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Slacker775\\Flysystem\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Slacker775\\Flysystem\\Tests\\": "tests"
+    }
+  },
+  "require-dev": {
+    "league/flysystem-adapter-test-utilities": "^2.3",
+    "symfony/http-client": "^6.0",
+    "symfony/var-dumper": "^6.0",
+    "php-http/httplug": "^2.2",
+    "phpunit/phpunit": "^9.5"
+  },
+  "require": {
+    "league/flysystem": "^2.4",
+    "slacker775/backblaze-b2-api": "@dev",
+    "guzzlehttp/psr7": "^2.1",
+    "nyholm/psr7": "^1.4"
+  },
+  "repositories": {
+    "local": {
+      "type": "path",
+      "url": "../backblaze-b2-api"
+    }
+  }
+}
