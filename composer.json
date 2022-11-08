@@ -20,22 +20,16 @@
     }
   },
   "require-dev": {
-    "league/flysystem-adapter-test-utilities": "^2.3",
+    "league/flysystem-adapter-test-utilities": "^2.0|^3.0",
     "symfony/http-client": "^6.0",
     "symfony/var-dumper": "^6.0",
     "php-http/httplug": "^2.2",
     "phpunit/phpunit": "^9.5"
   },
   "require": {
-    "league/flysystem": "^2.4",
-    "slacker775/backblaze-b2-api": "@dev",
+    "league/flysystem": "^2.0|^3.0",
+    "slacker775/backblaze-b2-api": "^0.1.0",
     "guzzlehttp/psr7": "^2.1",
     "nyholm/psr7": "^1.4"
-  },
-  "repositories": {
-    "local": {
-      "type": "path",
-      "url": "../backblaze-b2-api"
-    }
   }
 }

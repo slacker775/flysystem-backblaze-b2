@@ -23,4 +23,12 @@ class BackblazeAdapterTests
         );
     }
 
+    /**
+     * @test
+     */
+    public function setting_visibility(): void
+    {
+        self::markTestSkipped('Backblaze does not support visibility');
+    }
+
 }

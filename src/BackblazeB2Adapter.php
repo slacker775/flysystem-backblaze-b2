@@ -14,6 +14,7 @@ use League\Flysystem\DirectoryAttributes;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\PathPrefixer;
+use League\Flysystem\UnableToCheckDirectoryExistence;
 use League\Flysystem\UnableToCheckFileExistence;
 use League\Flysystem\UnableToCopyFile;
 use League\Flysystem\UnableToCreateDirectory;
@@ -37,7 +38,7 @@ class BackblazeB2Adapter implements FilesystemAdapter
     private MimeTypeDetector $mimeTypeDetector;
 
     public function __construct(private ApiClient $client,
-        private string $bucketId, private string $prefix = '',
+        private string $bucketId, string $prefix = '',
         MimeTypeDetector $mimeTypeDetector = null
     ) {
         $this->prefixer = new PathPrefixer($prefix);
@@ -59,6 +60,19 @@ class BackblazeB2Adapter implements FilesystemAdapter
             return false;
         } catch (BackblazeB2Exception $e) {
             throw UnableToCheckFileExistence::forLocation($path, $e);
+        }
+    }
+
+    public function directoryExists(string $path): bool
+    {
+        try {
+            return $this->client->getFileByName(
+                    $this->prefixer->stripPrefix($path), $this->bucketId
+                ) !== null;
+        } catch (NotFoundException $e) {
+            return false;
+        } catch (BackblazeB2Exception $e) {
+            throw UnableToCheckDirectoryExistence::forLocation($path, $e);
         }
     }
 
@@ -158,7 +172,7 @@ class BackblazeB2Adapter implements FilesystemAdapter
     ): void {
         try {
             $this->client->uploadFile(
-                $this->prefixer->stripPrefix($path), $this->bucketId, ''
+                $this->prefixer->stripPrefix($path) . '/.bzEmpty', $this->bucketId, ''
             );
         } catch (BackblazeB2Exception $e) {
             throw UnableToCreateDirectory::atLocation($path);
@@ -333,7 +347,14 @@ class BackblazeB2Adapter implements FilesystemAdapter
         Config $config
     ): void {
         try {
-            $this->copy($source, $destination, $config);
+            $sourceFile = $this->client->getFileByName(
+                $source, $this->bucketId
+            );
+
+            $this->client->copyFile(
+                $sourceFile->getFileId(),
+                $this->prefixer->stripPrefix($destination)
+            );
             $this->delete($source);
         } catch (BackblazeB2Exception $e) {
             throw UnableToMoveFile::fromLocationTo($source, $destination, $e);
