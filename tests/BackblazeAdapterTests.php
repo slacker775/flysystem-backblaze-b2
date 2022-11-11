@@ -31,4 +31,12 @@ class BackblazeAdapterTests
         self::markTestSkipped('Backblaze does not support visibility');
     }
 
+    /**
+     * @test
+     */
+    public function overwriting_a_file(): void
+    {
+        self::markTestSkipped('Backblze does not support visibility');
+    }
+
 }
