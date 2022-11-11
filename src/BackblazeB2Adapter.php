@@ -66,9 +66,17 @@ class BackblazeB2Adapter implements FilesystemAdapter
     public function directoryExists(string $path): bool
     {
         try {
-            return $this->client->getFileByName(
-                    $this->prefixer->stripPrefix($path), $this->bucketId
-                ) !== null;
+            foreach (
+                $this->client->getFileByPrefix($path, $this->bucketId) as
+                $result
+            ) {
+                if ($result->getFileName() === $path . '/'
+                    && $result->getAction() === 'folder'
+                ) {
+                    return true;
+                }
+            }
+            return false;
         } catch (NotFoundException $e) {
             return false;
         } catch (BackblazeB2Exception $e) {
@@ -172,7 +180,8 @@ class BackblazeB2Adapter implements FilesystemAdapter
     ): void {
         try {
             $this->client->uploadFile(
-                $this->prefixer->stripPrefix($path) . '/.bzEmpty', $this->bucketId, ''
+                $this->prefixer->stripPrefix($path) . '/.bzEmpty',
+                $this->bucketId, ''
             );
         } catch (BackblazeB2Exception $e) {
             throw UnableToCreateDirectory::atLocation($path);
@@ -228,7 +237,7 @@ class BackblazeB2Adapter implements FilesystemAdapter
             $timestamp,
             $file->getContentType(),
             [
-                'sha1' => $file->getContentSha1(),
+                'sha1'   => $file->getContentSha1(),
                 'fileId' => $file->getFileId(),
             ]
         );
@@ -389,7 +398,7 @@ class BackblazeB2Adapter implements FilesystemAdapter
     {
         try {
             $this->client->deleteFile(
-                null, $this->prefixer->stripPrefix($path), $this->bucketId
+                null, $this->prefixer->stripPrefix($path), $this->bucketId, true
             );
         } catch (BackblazeB2Exception $e) {
             throw UnableToDeleteFile::atLocation($path, '', $e);
