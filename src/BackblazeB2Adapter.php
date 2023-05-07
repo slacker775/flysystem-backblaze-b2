@@ -25,11 +25,14 @@ use League\Flysystem\UnableToReadFile;
 use League\Flysystem\UnableToRetrieveMetadata;
 use League\Flysystem\UnableToSetVisibility;
 use League\Flysystem\UnableToWriteFile;
+use League\Flysystem\Visibility;
 use League\MimeTypeDetection\FinfoMimeTypeDetector;
 use League\MimeTypeDetection\MimeTypeDetector;
 
 class BackblazeB2Adapter implements FilesystemAdapter
 {
+
+    const DELIMITER = '/';
 
     private PathPrefixer $prefixer;
 
@@ -308,17 +311,18 @@ class BackblazeB2Adapter implements FilesystemAdapter
      */
     public function listContents(string $path, bool $deep): iterable
     {
+        printf("%s path=%s deep=%d\n", __METHOD__, $path, $deep ? 1: 0);
         if ($deep === true && $path === '') {
             $regex = '/^.*$/';
         } elseif ($deep === true && $path !== '') {
             $regex = '/^' . preg_quote(
-                    $this->prefixer->stripDirectoryPrefix($path), '/'
+                    $this->prefixer->stripDirectoryPrefix($path), self::DELIMITER
                 ) . "\/.*$/";
         } elseif ($deep === false && $path === '') {
             $regex = '/^(?!.*\\/).*$/';
         } elseif ($deep === false && $path !== '') {
             $regex = '/^' . preg_quote(
-                    $this->prefixer->stripDirectoryPrefix($path), '/'
+                    $this->prefixer->stripDirectoryPrefix($path), self::DELIMITER
                 )
                 . '\/(?!.*\\/).*$/';
         } else {
@@ -326,7 +330,7 @@ class BackblazeB2Adapter implements FilesystemAdapter
         }
 
         foreach (
-            $this->client->listFilenames($this->bucketId, 100, $path, '/') as
+            $this->client->listFilenames($this->bucketId, 100, $path, self::DELIMITER) as
             $file
         ) {
             switch ($file->getAction()) {
@@ -336,14 +340,20 @@ class BackblazeB2Adapter implements FilesystemAdapter
                     }
                     break;
                 case 'folder':
-                    yield new DirectoryAttributes(
-                        $file->getFileName(), 'public'
-                    );
+                    if($path . self::DELIMITER === $file->getFileName() || $deep === true) {
+                        yield from $this->listContents($file->getFileName(), $deep);
+                    } else {
+                        yield new DirectoryAttributes(
+                            $file->getFileName(), Visibility::PUBLIC
+                        );
+                    }
+                    /*
                     if ($deep) {
                         yield from $this->listContents(
                             $file->getFileName(), $deep
                         );
                     }
+                    */
                     break;
             }
         }
