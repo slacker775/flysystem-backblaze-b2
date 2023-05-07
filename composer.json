@@ -24,12 +24,17 @@
     "symfony/http-client": "^6.0",
     "symfony/var-dumper": "^6.0",
     "php-http/httplug": "^2.2",
-    "phpunit/phpunit": "^9.5"
+    "phpunit/phpunit": "^10.0"
   },
   "require": {
     "league/flysystem": "^2.0|^3.0",
     "slacker775/backblaze-b2-api": "^0.1.0",
     "guzzlehttp/psr7": "^2.1",
     "nyholm/psr7": "^1.4"
+  },
+  "config": {
+    "allow-plugins": {
+      "php-http/discovery": true
+    }
   }
 }
