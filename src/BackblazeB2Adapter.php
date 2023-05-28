@@ -311,7 +311,6 @@ class BackblazeB2Adapter implements FilesystemAdapter
      */
     public function listContents(string $path, bool $deep): iterable
     {
-        printf("%s path=%s deep=%d\n", __METHOD__, $path, $deep ? 1: 0);
         if ($deep === true && $path === '') {
             $regex = '/^.*$/';
         } elseif ($deep === true && $path !== '') {
