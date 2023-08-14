@@ -6,6 +6,7 @@ use Backblaze\B2\ApiClient;
 use Backblaze\B2\Exception\BackblazeB2Exception;
 use Backblaze\B2\Exception\NotFoundException;
 use Backblaze\B2\Model\File;
+use DateTimeInterface;
 use GuzzleHttp\Psr7\StreamWrapper;
 use InvalidArgumentException;
 use JetBrains\PhpStorm\Pure;
@@ -25,11 +26,12 @@ use League\Flysystem\UnableToReadFile;
 use League\Flysystem\UnableToRetrieveMetadata;
 use League\Flysystem\UnableToSetVisibility;
 use League\Flysystem\UnableToWriteFile;
+use League\Flysystem\UrlGeneration\TemporaryUrlGenerator;
 use League\Flysystem\Visibility;
 use League\MimeTypeDetection\FinfoMimeTypeDetector;
 use League\MimeTypeDetection\MimeTypeDetector;
 
-class BackblazeB2Adapter implements FilesystemAdapter
+class BackblazeB2Adapter implements FilesystemAdapter, TemporaryUrlGenerator
 {
 
     const DELIMITER = '/';
@@ -121,15 +123,20 @@ class BackblazeB2Adapter implements FilesystemAdapter
         }
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function read(string $path): string
+    private function setBucketName(): void
     {
         if ($this->bucketName === null) {
             $buckets = $this->client->listBuckets(null, $this->bucketId);
             $this->bucketName = $buckets[0]->getBucketName();
         }
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function read(string $path): string
+    {
+        $this->setBucketName();
 
         try {
             return (string)$this->client->downloadFileByName(
@@ -145,10 +152,7 @@ class BackblazeB2Adapter implements FilesystemAdapter
      */
     public function readStream(string $path)
     {
-        if ($this->bucketName === null) {
-            $buckets = $this->client->listBuckets(null, $this->bucketId);
-            $this->bucketName = $buckets[0]->getBucketName();
-        }
+        $this->setBucketName();
 
         try {
             return StreamWrapper::getResource(
@@ -412,6 +416,23 @@ class BackblazeB2Adapter implements FilesystemAdapter
         } catch (BackblazeB2Exception $e) {
             throw UnableToDeleteFile::atLocation($path, '', $e);
         }
+    }
+
+    public function temporaryUrl(string $path, DateTimeInterface $expiresAt,
+        Config $config
+    ): string {
+        $this->setBucketName();
+
+        $now = new \DateTimeImmutable();
+        $seconds = (int)$expiresAt->format('U') - (int)$now->format('U');
+
+        $authToken = $this->client->getDownloadAuthorization(
+            $path, $this->bucketId, $seconds
+        );
+
+        return $this->client->createDownloadUrl(
+            $path, $this->bucketName, $authToken
+        );
     }
 
 }

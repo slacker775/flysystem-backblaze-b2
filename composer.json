@@ -28,7 +28,7 @@
   },
   "require": {
     "league/flysystem": "^2.0|^3.0",
-    "slacker775/backblaze-b2-api": "^0.2.0",
+    "slacker775/backblaze-b2-api": "^0.3.0",
     "guzzlehttp/psr7": "^2.1",
     "nyholm/psr7": "^1.4"
   },
